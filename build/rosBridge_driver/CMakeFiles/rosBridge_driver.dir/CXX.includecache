@@ -25,6 +25,8 @@ string
 -
 vector
 -
+std_msgs/Bool.h
+/home/cdio/cdio_ws/src/rosBridge_driver/src/std_msgs/Bool.h
 
 /opt/ros/indigo/include/XmlRpcDecl.h
 ros/macros.h
@@ -838,6 +840,22 @@ ros/message_operations.h
 stdexcept
 -
 string
+-
+
+/opt/ros/indigo/include/std_msgs/Bool.h
+string
+-
+vector
+-
+map
+-
+ros/types.h
+-
+ros/serialization.h
+-
+ros/builtin_message_traits.h
+-
+ros/message_operations.h
 -
 
 /opt/ros/indigo/include/std_msgs/Header.h

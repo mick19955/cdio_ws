@@ -8,6 +8,7 @@ It is intended as a simple example for those starting with the AR Drone platform
 */
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/Twist.h>
 
 	geometry_msgs::Twist twist;
@@ -16,8 +17,24 @@ It is intended as a simple example for those starting with the AR Drone platform
 	geometry_msgs::Twist twist_up;
 	geometry_msgs::Twist twist_spin;
 	std_msgs::Empty empty;
+	int circle = 0;
 	
-enum State_machine {Landing, Flying, Still};
+	ros::Publisher pub_land;
+	ros::Publisher pub_twist;
+	ros::Publisher pub_takeoff;
+	ros::Publisher pub_reset;
+
+
+enum State_machine {Still, Flying, Landing};
+
+
+void found_circle(const std_msgs::Bool::ConstPtr& circle_detected)
+{
+	circle = circle_detected->data;
+
+	std::cout << "data "<< circle << std::endl;
+
+}
 
 int main(int argc, char** argv)
 {
@@ -26,10 +43,7 @@ int main(int argc, char** argv)
     	ros::NodeHandle node;
     	ros::Rate loop_rate(50);
 
-	ros::Publisher pub_land;
-	ros::Publisher pub_twist;
-	ros::Publisher pub_takeoff;
-	ros::Publisher pub_reset;
+	
 	double start_time;
 
 	//hover message
@@ -62,7 +76,7 @@ int main(int argc, char** argv)
 	twist_spin.linear.z=0.0; //+up		-down
 	twist_spin.angular.x=0.0; //ignore
 	twist_spin.angular.y=0.0; //ignore
-	twist_spin.angular.z=1.0; //+turn left	-turn right
+	twist_spin.angular.z=2.0; //+turn left	-turn right
 
 	//used for the original commented-out code
 	twist_neg.linear.x=-twist.linear.x; 
@@ -78,8 +92,10 @@ int main(int argc, char** argv)
 	pub_takeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1); //publish here to start takeoff sequence
 	pub_land = node.advertise<std_msgs::Empty>("/ardrone/land", 1); //publish here to start landing sequence
 	pub_reset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1); //publish here to reset drone
-
 	
+
+	ros::Subscriber circle_sub = node.subscribe ("/Circle_found", 1, found_circle);
+
 	start_time =(double)ros::Time::now().toSec();	 //start timer
 	ROS_INFO("Starting ARdrone_test loop");
 
@@ -104,7 +120,22 @@ int main(int argc, char** argv)
 
 		}else if(State == Flying){
 			std::cout << "State == " << State << std::endl;
-			pub_twist.publish(twist_spin); //Send spin command
+
+			double flying_start_time = (double)ros::Time::now().toSec(); //get current time
+			double flying_time = 7 + flying_start_time; //fly for 7 seconds
+			while(flying_time > (double)ros::Time::now().toSec()){
+				if(circle == 1){
+					pub_twist.publish(twist_spin); //Send spin command
+					std::cout << "Circle has been detected!" << std::endl;
+					sleep(1);
+				}
+				else{
+					pub_twist.publish(twist_hover); //Send hover command
+					// std::cout << "No circle detected!" << std::endl;
+				}
+				ros::spinOnce();
+				loop_rate.sleep();
+			}
 			//do detection here
 			/*
 			if(subscribe.qrdetection == true){
@@ -120,8 +151,8 @@ int main(int argc, char** argv)
 						loop_rate.sleep();
 					}//while flying up
 					//Loop if ring is still not found
-				ros::spinOnce();
-				loop_rate.sleep();
+					ros::spinOnce();
+					loop_rate.sleep();
 				}//while not found
 				//ring has been found!
 				//and is hopoefully in front of us
@@ -141,11 +172,13 @@ int main(int argc, char** argv)
 			
 			*/
 
+			
+
 			//this is just for testing purpose
-			sleep(4);
+			
 			//testing ^ ^ ^ ^
-			pub_twist.publish(twist_hover); //Send spin command
-			sleep(2);
+			//pub_twist.publish(twist_hover); //Send spin command
+			//sleep(2);
 			//job is done, now land
 			State = Landing;
 

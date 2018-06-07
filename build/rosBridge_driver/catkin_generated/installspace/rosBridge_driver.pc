@@ -1,0 +1,8 @@
+prefix=/home/cdio/cdio_ws/install
+
+Name: rosBridge_driver
+Description: Description of rosBridge_driver
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/cdio/cdio_ws/install/lib 
+Requires: 

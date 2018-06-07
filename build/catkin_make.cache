@@ -1,0 +1,2 @@
+ardrone_autonomy:flight_controller:rosBridge_driver:tum_ardrone
+-DCATKIN_DEVEL_PREFIX=/home/cdio/cdio_ws/devel -DCMAKE_INSTALL_PREFIX=/home/cdio/cdio_ws/install -G Unix Makefiles

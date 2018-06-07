@@ -1,0 +1,8 @@
+prefix=/home/cdio/cdio_ws/devel
+
+Name: flight_controller
+Description: Description of flight_controller
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/cdio/cdio_ws/devel/lib 
+Requires: 

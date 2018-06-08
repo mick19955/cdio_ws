@@ -4,8 +4,6 @@
 # 
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
-SUBDIRS(gtest)
-SUBDIRS(flight_controller)
-SUBDIRS(rosBridge_driver)
-SUBDIRS(ardrone_autonomy)
-SUBDIRS(tum_ardrone)
+subdirs("gtest")
+subdirs("flight_controller")
+subdirs("rosBridge_driver")

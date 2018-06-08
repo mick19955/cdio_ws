@@ -152,7 +152,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 add_executable(rosBridge_driver src/rosBridge.cpp)
-target_link_libraries(rosBridge_driver ${catkin_LIBRARIES})
+target_link_libraries(rosBridge_driver ${catkin_LIBRARIES} zbar)
 
 #############
 ## Install ##

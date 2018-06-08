@@ -7,11 +7,4 @@
 # new environment variables
 
 # modified environment variables
-export CMAKE_PREFIX_PATH="/home/cdio/cdio_ws/devel:/opt/ros/indigo"
-export CPATH="/opt/ros/indigo/include"
-export LD_LIBRARY_PATH="/opt/ros/indigo/lib:/opt/ros/indigo/lib/x86_64-linux-gnu"
-export PKG_CONFIG_PATH="/opt/ros/indigo/lib/pkgconfig:/opt/ros/indigo/lib/x86_64-linux-gnu/pkgconfig"
 export PWD="/home/cdio/cdio_ws/build"
-export PYTHONPATH="/opt/ros/indigo/lib/python2.7/dist-packages"
-export ROSLISP_PACKAGE_DIRECTORIES="/home/cdio/cdio_ws/devel/share/common-lisp"
-export ROS_PACKAGE_PATH="/home/cdio/cdio_ws/src:/opt/ros/indigo/share:/opt/ros/indigo/stacks"

@@ -29,7 +29,7 @@ int yDiversionAngle;
 double y2Diversion;
 double y1Diversion;
 double distance_to_QR[200];
-
+std_msgs::Int32MultiArray QR_info;
 
 typedef struct
 {
@@ -51,16 +51,19 @@ void display(Mat &im, vector<decodedObject>&decodedObjects);
 
 int main(int argc, char** argv)
 {
-  	ros::init(argc, argv, "Circle_Detect");
   	
- 	ros::NodeHandle n;
+	ros::init(argc, argv, "Circle_Detect");
+  	
+	ros::NodeHandle n;
 
 
+	
 	//initializing subscription and publisher
+	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/QR_info_array", 100);
 	ros::Subscriber sub 		= n.subscribe ("/ardrone/image_raw", 1, load_new);
 	//ros::Publisher image_pub 	= n.advertise<sensor_msgs::Image>("/image_converter/output_video", 1);
 	ros::Publisher circle_found_pub = n.advertise<std_msgs::Bool>("/Circle_found", 1);
-	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/QR_info_array", 1000);
+
 
 	ros::Rate loop_rate(25);
 
@@ -82,6 +85,9 @@ int main(int argc, char** argv)
   
 			// Finding QR codes from orig_image
 			decode(orig_image, decodedObjects);
+
+			//publishing the decoded information
+			QR_info_pub.publish(QR_info);			
 
 			// Adding outline of qr code to orig_image
 			display(orig_image, decodedObjects);
@@ -170,9 +176,13 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
   	// Scan the image for barcodes and QRCodes
   	int number_of_detections = scanner.scan(image);
   
-	int x_0, x_1, x_2, x_3, y_0, y_1, y_2, y_3, x_size, y_size, x_middle, QR_size;
+	int x_0, x_1, x_2, x_3, y_0, y_1, y_2, y_3, x_size, y_size, x_middle, y_middle, QR_size;
 	vector<Point> vp;	
 
+
+		
+	QR_info.data.clear();
+	
 	for (Image::SymbolIterator symbol = image.symbol_begin(); symbol != image.symbol_end(); ++symbol) {
 
 
@@ -209,6 +219,7 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
             x_size = (abs((x_0 - x_2)) + abs((x_1 - x_3))) / 2;                          // Calculate Vertical size of the QR
             y_size = (abs((y_0 - y_2)) + abs((y_3 - y_1))) / 2;                          // Calculate Horizontal size of the QR
             x_middle = (x_0 + x_1 + x_2 + x_3) / 4;                                        // The horizontal middle of the QR
+	    y_middle = (y_0 + y_1 + y_2 + y_3) / 4; 
 
             QR_size = (x_size + y_size) / 2;                                           // The size of the QR
             double distance_to_QRdouble = calculatedistance_to_QR(QR_size);               // To prevent errors when typecasting
@@ -246,14 +257,18 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
             double x_Distancedouble = ((x_middle - 320) / x_DistanceStatic * distance_to_QR / 150); // Calculate in cm's where the center of the camera is, according to the center of the QR
             int x_Distance = (int) x_Distancedouble;
 
+	    double y_DistanceStatic = 3.61194;                                       
+            double y_Distancedouble = ((y_middle - 180) / y_DistanceStatic * distance_to_QR / 150); // Calculate in cm's where the center of the camera is, according to the center of the QR
+            int y_Distance = (int) y_Distancedouble;
 
             cout << "Kamera center er: " << x_Distance << "cm til venstre for QR-koden" << endl;
-
-
+	    cout << "Kamera center er: " << y_Distance << "cm over QR-koden" << endl;
+	    
+	    QR_info.data.push_back(distance_to_QR);
+	    QR_info.data.push_back(x_Distance);
+ 	    QR_info.data.push_back(y_Distance);
 
 	} //end big ass for loop
-
-	//QR_info_pub.publish
 
 }
 

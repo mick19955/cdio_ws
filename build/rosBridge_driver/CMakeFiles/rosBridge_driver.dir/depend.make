@@ -75,4 +75,7 @@ rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/i
 rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/sensor_msgs/image_encodings.h
 rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/std_msgs/Bool.h
 rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/std_msgs/Header.h
+rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/std_msgs/Int32MultiArray.h
+rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/std_msgs/MultiArrayDimension.h
+rosBridge_driver/CMakeFiles/rosBridge_driver.dir/src/rosBridge.cpp.o: /opt/ros/indigo/include/std_msgs/MultiArrayLayout.h
 

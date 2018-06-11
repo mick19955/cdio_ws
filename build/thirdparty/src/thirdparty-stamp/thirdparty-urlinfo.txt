@@ -1,3 +1,0 @@
-repository='external project URL'
-module='/home/cdio/cdio_ws/src/tum_ardrone/thirdparty/thirdparty.tar.gz'
-tag=''

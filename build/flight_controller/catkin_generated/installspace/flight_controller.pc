@@ -1,8 +1,0 @@
-prefix=/home/cdio/cdio_ws/install
-
-Name: flight_controller
-Description: Description of flight_controller
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/cdio/cdio_ws/install/lib 
-Requires: 

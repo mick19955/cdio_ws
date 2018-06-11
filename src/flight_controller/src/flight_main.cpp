@@ -43,7 +43,7 @@ ros::Publisher pub_reset;	//publish empty here to reset drone
 ros::Publisher pub_instruct;	//publish fly instructions here
 
 enum State_machine {Still, Flying, Landing};
-enum Instructions_state {up, down, left, right, forward, backward, takeoff, land};
+enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, hover};
 
 //prototype functions
 void found_circle(const std_msgs::Bool::ConstPtr& circle_detected);
@@ -107,15 +107,29 @@ int main(int argc, char** argv)
 			std::cout << "State == " << State << std::endl;
 
 			while(!job_done){
-				Instructions = right;
-				do_instruction(right, 1); //fly right
 
-				Instructions = left;
-				do_instruction(left, 1); //fly left
+				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
+				
 
-				for(int k = 0; k < 3/*size of QR*/; k++){
-					std::cout << QR[k] << std::endl;
+				if(QR[1] >= 20){ //correcting position relative to the y-axis
+					Instructions = right;
+					do_instruction(right, 0.1);
+				}else if(QR[1] <= -20){
+					Instructions = left;
+					do_instruction(left, 0.1);
+				}else if(QR[2] >= 12){ //correcting position relative to the y-axis
+					Instructions = down;
+					do_instruction(down, 0.1);
+					std::cout << "Down" << std::endl;
+				}else if(QR[2] <= -12){
+					Instructions = up;
+					do_instruction(up, 0.1);
+					std::cout << "up" << std::endl;
+				}else{
+					Instructions = hover;
+					do_instruction(hover, 0.1);
 				}
+				
 
 				ros::spinOnce(); //spin to get updated ros values
 				loop_rate.sleep(); //Will sleep to maintain loop_rate
@@ -229,7 +243,7 @@ void init_instructions(){
 	//hover message
 	instruct_hover.linear.x=0.0; 	//+forward 	-backwards
 	instruct_hover.linear.y=0.0;	//+left		-right
-	instruct_hover.linear.z=0.0;	//+up		-down    	might be inversed
+	instruct_hover.linear.z=0.0;	//+up		-down    	
 	instruct_hover.angular.x=0.0;  	//ignore
 	instruct_hover.angular.y=0.0;	//ignore
 	instruct_hover.angular.z=0.0;  	//+turn left	-turn right
@@ -237,21 +251,21 @@ void init_instructions(){
 	//up message
 	instruct_up.linear.x=0.0; 
 	instruct_up.linear.y=0.0;
-	instruct_up.linear.z=0.3;
+	instruct_up.linear.z=0.20;
 	instruct_up.angular.x=0.0; 
 	instruct_up.angular.y=0.0;
 	instruct_up.angular.z=0.0;
 
 	//down message
-	instruct_up.linear.x=0.0; 
-	instruct_up.linear.y=0.0;
-	instruct_up.linear.z=-0.3;
-	instruct_up.angular.x=0.0; 
-	instruct_up.angular.y=0.0;
-	instruct_up.angular.z=0.0;
+	instruct_down.linear.x=0.0; 
+	instruct_down.linear.y=0.0;
+	instruct_down.linear.z=-0.20;
+	instruct_down.angular.x=0.0; 
+	instruct_down.angular.y=0.0;
+	instruct_down.angular.z=0.0;
 
 	//forward message
-	instruct_forward.linear.x=0.3; 
+	instruct_forward.linear.x=0.05; 
 	instruct_forward.linear.y=0.0;
 	instruct_forward.linear.z=0.0;
 	instruct_forward.angular.x=0.0; 
@@ -259,7 +273,7 @@ void init_instructions(){
 	instruct_forward.angular.z=0.0;
 
 	//backward message
-	instruct_backward.linear.x=-0.3; 
+	instruct_backward.linear.x=-0.05; 
 	instruct_backward.linear.y=0.0;
 	instruct_backward.linear.z=0.0;
 	instruct_backward.angular.x=0.0; 
@@ -268,7 +282,7 @@ void init_instructions(){
 
 	//right message
 	instruct_right.linear.x=0.0; 
-	instruct_right.linear.y=-0.3; 
+	instruct_right.linear.y=-0.05; 
 	instruct_right.linear.z=0.0; 
 	instruct_right.angular.x=0.0;
 	instruct_right.angular.y=0.0; 
@@ -276,7 +290,7 @@ void init_instructions(){
 
 	//left message
 	instruct_left.linear.x=0.0; 
-	instruct_left.linear.y=0.3; 
+	instruct_left.linear.y=0.05; 
 	instruct_left.linear.z=0.0; 
 	instruct_left.angular.x=0.0;
 	instruct_left.angular.y=0.0; 

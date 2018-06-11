@@ -159,7 +159,10 @@ int main(int argc, char** argv)
 // Find and decode barcodes and QR codes
 void decode(Mat &im, vector<decodedObject>&decodedObjects)
 {
-  
+	//init variables
+	int distance_to_QR = 0;  
+	int x_Distance = 0;
+	int y_Distance = 0;
 	// Create zbar scanner
   	ImageScanner scanner;
 
@@ -223,7 +226,7 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
 
             QR_size = (x_size + y_size) / 2;                                           // The size of the QR
             double distance_to_QRdouble = calculatedistance_to_QR(QR_size);               // To prevent errors when typecasting
-            int distance_to_QR = (int)distance_to_QRdouble; // double to int
+            distance_to_QR = (int)distance_to_QRdouble; // double to int
             std::string QR_name = symbol->get_data();
 
             double y_left, y_right, y_temp, y_ratio;
@@ -251,25 +254,28 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
             y2Diversion = (y_ratio * 637.3656) - 642.2072;                           //
 
 
-            cout << "distance to the QR code = " << distance_to_QR << "cm, with the text: " << QR_name << endl << endl;
+
 
             double x_DistanceStatic = 3.61194;                                       // Calculated using 243 pixels for 67cm on 150cm distance.
             double x_Distancedouble = ((x_middle - 320) / x_DistanceStatic * distance_to_QR / 150); // Calculate in cm's where the center of the camera is, according to the center of the QR
-            int x_Distance = (int) x_Distancedouble;
+            x_Distance = (int) x_Distancedouble;
 
 	    double y_DistanceStatic = 3.61194;                                       
             double y_Distancedouble = ((y_middle - 180) / y_DistanceStatic * distance_to_QR / 150); // Calculate in cm's where the center of the camera is, according to the center of the QR
-            int y_Distance = (int) y_Distancedouble;
+            y_Distance = (int) y_Distancedouble;
 
-            cout << "Kamera center er: " << x_Distance << "cm til venstre for QR-koden" << endl;
-	    cout << "Kamera center er: " << y_Distance << "cm over QR-koden" << endl;
+
 	    
-	    QR_info.data.push_back(distance_to_QR);
-	    QR_info.data.push_back(x_Distance);
- 	    QR_info.data.push_back(y_Distance);
-		//push also the data read from the QR code it self
-
+	   
 	} //end big ass for loop
+
+            cout << "distance to the QR code = " << distance_to_QR << "cm, with the text: " << endl << endl;
+	    cout << "Kamera center er: " << x_Distance << "cm til venstre for QR-koden" << endl;
+	    cout << "Kamera center er: " << y_Distance << "cm over QR-koden" << endl;
+ 	QR_info.data.push_back(distance_to_QR);
+	QR_info.data.push_back(x_Distance);
+ 	QR_info.data.push_back(y_Distance);
+	//push also the data read from the QR code it self
 
 }
 

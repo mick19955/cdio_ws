@@ -62,4 +62,7 @@ flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/r
 flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/rosconsole/macros_generated.h
 flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/std_msgs/Bool.h
 flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/std_msgs/Empty.h
+flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/std_msgs/Int32MultiArray.h
+flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/std_msgs/MultiArrayDimension.h
+flight_controller/CMakeFiles/flight_controller.dir/src/flight_main.cpp.o: /opt/ros/indigo/include/std_msgs/MultiArrayLayout.h
 

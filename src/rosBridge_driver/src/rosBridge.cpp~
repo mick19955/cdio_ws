@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
 	
 	//initializing subscription and publisher
-	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/QR_info_array", 1000);
+	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/QR_info_array", 100);
 	ros::Subscriber sub 		= n.subscribe ("/ardrone/image_raw", 1, load_new);
 	//ros::Publisher image_pub 	= n.advertise<sensor_msgs::Image>("/image_converter/output_video", 1);
 	ros::Publisher circle_found_pub = n.advertise<std_msgs::Bool>("/Circle_found", 1);
@@ -267,6 +267,7 @@ void decode(Mat &im, vector<decodedObject>&decodedObjects)
 	    QR_info.data.push_back(distance_to_QR);
 	    QR_info.data.push_back(x_Distance);
  	    QR_info.data.push_back(y_Distance);
+		//push also the data read from the QR code it self
 
 	} //end big ass for loop
 
@@ -322,6 +323,7 @@ double calculatedistance_to_QR(int pixels) {
     else if (pixels > 130) return -2;    // If distance is less than 1m.
     else return distance_to_QR[pixels]; // Returns distance in cm.
 }
+
 
 //only shameful code lies beneath
 
@@ -420,37 +422,37 @@ void init_distance(){
     distance_to_QR[96] = 126;
     distance_to_QR[97] = 125;
     distance_to_QR[98] = 124;
-    distance_to_QR[99] = 122+1;
-    distance_to_QR[100] = 121+1;
-    distance_to_QR[101] = 120+1;
-    distance_to_QR[102] = 119+2;
-    distance_to_QR[103] = 118+2;
-    distance_to_QR[104] = 116+2;
-    distance_to_QR[105] = 115+3;
-    distance_to_QR[106] = 114+3;
-    distance_to_QR[107] = 113+3;
-    distance_to_QR[108] = 112+4;
-    distance_to_QR[109] = 111+4;
-    distance_to_QR[110] = 110+4;
-    distance_to_QR[111] = 108+5;
-    distance_to_QR[112] = 108+5;
-    distance_to_QR[113] = 106+5;
-    distance_to_QR[114] = 105+6;
-    distance_to_QR[115] = 104+6;
-    distance_to_QR[116] = 103+6;
-    distance_to_QR[117] = 101+7;
-    distance_to_QR[118] = 100+7;
-    distance_to_QR[119] = 99+7;
-    distance_to_QR[120] = 98+8;
-    distance_to_QR[121] = 97+8;
-    distance_to_QR[122] = 96+8;
-    distance_to_QR[123] = 95+9;
-    distance_to_QR[124] = 94+9;
-    distance_to_QR[125] = 93+9;
-    distance_to_QR[126] = 92+9;
-    distance_to_QR[127] = 91+10;
-    distance_to_QR[128] = 90+10;
-    distance_to_QR[129] = 89+10;
-    distance_to_QR[130] = 88+10;
+    distance_to_QR[99] = 123;
+    distance_to_QR[100] = 122;
+    distance_to_QR[101] = 121;
+    distance_to_QR[102] = 121;
+    distance_to_QR[103] = 120;
+    distance_to_QR[104] = 118;
+    distance_to_QR[105] = 118;
+    distance_to_QR[106] = 117;
+    distance_to_QR[107] = 116;
+    distance_to_QR[108] = 116;
+    distance_to_QR[109] = 115;
+    distance_to_QR[110] = 114;
+    distance_to_QR[111] = 113;
+    distance_to_QR[112] = 113;
+    distance_to_QR[113] = 111;
+    distance_to_QR[114] = 111;
+    distance_to_QR[115] = 110;
+    distance_to_QR[116] = 109;
+    distance_to_QR[117] = 108;
+    distance_to_QR[118] = 107;
+    distance_to_QR[119] = 106;
+    distance_to_QR[120] = 906;
+    distance_to_QR[121] = 105;
+    distance_to_QR[122] = 104;
+    distance_to_QR[123] = 104;
+    distance_to_QR[124] = 103;
+    distance_to_QR[125] = 102;
+    distance_to_QR[126] = 101;
+    distance_to_QR[127] = 101;
+    distance_to_QR[128] = 100;
+    distance_to_QR[129] = 99;
+    distance_to_QR[130] = 98;
 }
 

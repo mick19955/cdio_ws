@@ -10,31 +10,53 @@ It is intended as a simple example for those starting with the AR Drone platform
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Twist.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
+#include <iostream>
+#include <unistd.h> //contains usleep
 
-	geometry_msgs::Twist twist;
-	geometry_msgs::Twist twist_neg;
-	geometry_msgs::Twist twist_hover;
-	geometry_msgs::Twist twist_up;
-	geometry_msgs::Twist twist_spin;
-	std_msgs::Empty empty;
-	int circle = 0;
+#include "std_msgs/MultiArrayLayout.h"
+#include "std_msgs/MultiArrayDimension.h"
+#include "std_msgs/Int32MultiArray.h"
+
+//make predefined instruction messages ----
+geometry_msgs::Twist instruct;
+geometry_msgs::Twist instruct_hover;
+geometry_msgs::Twist instruct_up;
+geometry_msgs::Twist instruct_down;
+geometry_msgs::Twist instruct_right_spin;
+geometry_msgs::Twist instruct_left_spin;
+geometry_msgs::Twist instruct_forward;
+geometry_msgs::Twist instruct_backward;
+geometry_msgs::Twist instruct_right;
+geometry_msgs::Twist instruct_left;
+
+std_msgs::Empty empty;
+
+
 	
-	ros::Publisher pub_land;
-	ros::Publisher pub_twist;
-	ros::Publisher pub_takeoff;
-	ros::Publisher pub_reset;
+ros::Publisher pub_land; 	//publish empty here to start landing sequence
+ros::Publisher pub_takeoff; 	//publish empty here to start takeoff sequence
+ros::Publisher pub_reset;	//publish empty here to reset drone
 
+ros::Publisher pub_instruct;	//publish fly instructions here
 
 enum State_machine {Still, Flying, Landing};
+enum Instructions_state {up, down, left, right, forward, backward, takeoff, land};
+
+//prototype functions
+void found_circle(const std_msgs::Bool::ConstPtr& circle_detected);
+void init_instructions();
+void extract_qr_info(const std_msgs::Int32MultiArray::ConstPtr& qr_info);
+void do_instruction(Instructions_state instruction, double time);
+
+int circle = 0; //info if circle is found or not
 
 
-void found_circle(const std_msgs::Bool::ConstPtr& circle_detected)
-{
-	circle = circle_detected->data;
-
-	std::cout << "data "<< circle << std::endl;
-
-}
+//std::array<int,20> QR; TODO: implement QR info into c++ array
+//traditional c array
+int QR[3];
 
 int main(int argc, char** argv)
 {
@@ -43,77 +65,40 @@ int main(int argc, char** argv)
     	ros::NodeHandle node;
     	ros::Rate loop_rate(50);
 
-	
+	State_machine State = Still;
+	Instructions_state Instructions;
+
 	double start_time;
-
-	//hover message
-	twist_hover.linear.x=0.0; 
-	twist_hover.linear.y=0.0;
-	twist_hover.linear.z=0.0;
-	twist_hover.angular.x=0.0; 
-	twist_hover.angular.y=0.0;
-	twist_hover.angular.z=0.0;  
-
-	//up message not used for now
-	twist_up.linear.x=0.0; 
-	twist_up.linear.y=0.0;
-	twist_up.linear.z=0.30;
-	twist_up.angular.x=0.0; 
-	twist_up.angular.y=0.0;
-	twist_up.angular.z=0.0;
-
 	//command message
 	float takeoff_time=5.0;
 	float fly_time=7.0;
 	float land_time=3.0;
 	float kill_time =2.0;	
-	State_machine State = Still;
 
 	
-	//spin
-	twist_spin.linear.x=0.0; //+forward 	-backwards
-	twist_spin.linear.y=0.0; //+left	-right
-	twist_spin.linear.z=0.0; //+up		-down
-	twist_spin.angular.x=0.0; //ignore
-	twist_spin.angular.y=0.0; //ignore
-	twist_spin.angular.z=2.0; //+turn left	-turn right
-
-	//used for the original commented-out code
-	twist_neg.linear.x=-twist.linear.x; 
-	twist_neg.linear.y=-twist.linear.y;
-	twist_neg.linear.z=-twist.linear.z;
-	twist_neg.angular.x=-twist.angular.x; 
-	twist_neg.angular.y=-twist.angular.y;
-	twist_neg.angular.z=-twist.angular.z;
-
-
-	
-    	pub_twist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //publish here to give flight controls
+    	pub_instruct = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1); //publish here to give flight controls
 	pub_takeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1); //publish here to start takeoff sequence
 	pub_land = node.advertise<std_msgs::Empty>("/ardrone/land", 1); //publish here to start landing sequence
 	pub_reset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1); //publish here to reset drone
 	
 
 	ros::Subscriber circle_sub = node.subscribe ("/Circle_found", 1, found_circle);
+	ros::Subscriber qr_info_sub = node.subscribe("/QR_info_array", 100, extract_qr_info);
 
 	start_time =(double)ros::Time::now().toSec();	 //start timer
 	ROS_INFO("Starting ARdrone_test loop");
 
-	
-	
+	init_instructions();
+
+	bool job_done = false;	
+
 	while (ros::ok()){
 		if(State == Still){
 			std::cout << "State == " << State << std::endl;
-			pub_takeoff.publish(empty); //launches the drone
-			pub_twist.publish(twist_hover); //Send hover command
-			while ((double)ros::Time::now().toSec()< start_time + takeoff_time){ //loop while waiting for takeoff to finish
-				//------Waiting------
-				//std::cout << "Time == " <<(double)ros::Time::now().toSec() << std::endl;
-				pub_takeoff.publish(empty); //launches the drone
-				pub_twist.publish(twist_hover); //Send hover command
-				ros::spinOnce();
-				loop_rate.sleep();
-			}
+			
+			Instructions = takeoff;
+			do_instruction(takeoff, 5);
+
 			ros::spinOnce();
 			loop_rate.sleep();
 			State = Flying;
@@ -121,132 +106,196 @@ int main(int argc, char** argv)
 		}else if(State == Flying){
 			std::cout << "State == " << State << std::endl;
 
-			double flying_start_time = (double)ros::Time::now().toSec(); //get current time
-			double flying_time = 7 + flying_start_time; //fly for 7 seconds
-			while(flying_time > (double)ros::Time::now().toSec()){
-				if(circle == 1){
-					pub_twist.publish(twist_spin); //Send spin command
-					std::cout << "Circle has been detected!" << std::endl;
+			while(!job_done){
+				Instructions = right;
+				do_instruction(right, 1); //fly right
+
+				Instructions = left;
+				do_instruction(left, 1); //fly left
+
+				for(int k = 0; k < 3/*size of QR*/; k++){
+					std::cout << QR[k] << std::endl;
+				}
+
+				ros::spinOnce(); //spin to get updated ros values
+				loop_rate.sleep(); //Will sleep to maintain loop_rate
+
+	/* PSEUDO
+				if QR.info == P.01 //first QR code
+					first_qr_flag = true;
+
+				while(first_qr_flag)
+					if !correct_pos
+						if QR.x_Distance > 20
+							pub_instruct.publish(instruct_left); //Send left command
+						else if QR.x_Distance < -20
+							pub_instruct.publish(instruct_right); //Send roght command
+						else if QR.y_Distance > 20
+							pub_instruct.publish(instruct_down); //Send down command
+						else if QR.y_Distance < -20
+							pub_instruct.publish(instruct_up); //Send up command
+						else
+							//drone is now in correct position - break out
+							pub_instruct.publish(instruct_hover); //Send hover command
+							correct_pos = true;
+						sleep(1);
+
+					pub_instruct.publish(instruct_up); //Send down command
 					sleep(1);
-				}
-				else{
-					pub_twist.publish(twist_hover); //Send hover command
-					// std::cout << "No circle detected!" << std::endl;
-				}
-				ros::spinOnce();
-				loop_rate.sleep();
-			}
-			//do detection here
-			/*
-			if(subscribe.qrdetection == true){
-				//first qr has been found
-				while(subscribe.ringdetection != true){
-					//ring is not found
-					//fly up
-					//double up_start_time = (double)ros::Time::now().toSec(); //get current time
-					//double up_time = 0.5 + up_start_time; //fly up for half a second
-					while(up_time > (double)ros::Time::now().toSec()){
-						//pub_twist.publish(twist_up); //Send fly up command
-						ros::spinOnce();
-						loop_rate.sleep();
-					}//while flying up
-					//Loop if ring is still not found
-					ros::spinOnce();
-					loop_rate.sleep();
-				}//while not found
-				//ring has been found!
-				//and is hopoefully in front of us
-				//pub_twist.publish(twist); //Fly forward through the ring
-				
-				//double forwand_start_time = (double)ros::Time::now().toSec(); //get current time
-				//double forward_time = 1.0 + forward_start_time; //fly forward for a second
-				while(forwand_time > (double)ros::Time::now().toSec()){
-					//pub_twist.publish(twist); //Send fly forwand command
-					ros::spinOnce();
-					loop_rate.sleep();
-				}//while flying forward
-				
-			ros::spinOnce();
-			loop_rate.sleep();
-			}
-			
-			*/
+					pub_instruct.publish(instruct_forward); //Send down command
+					//we're not through the ring?
+		*/
+					
+			} //!job_done
 
-			
-
-			//this is just for testing purpose
-			
-			//testing ^ ^ ^ ^
-			//pub_twist.publish(twist_hover); //Send spin command
-			//sleep(2);
-			//job is done, now land
-			State = Landing;
+			if(job_done){
+				State = Landing;
+			}
 
 		}else if(State == Landing){
 			std::cout << "State == " << State << std::endl;
-			double landing_start_time = (double)ros::Time::now().toSec(); //get current time
-			double landing_time = 2 + landing_start_time; //fly up for half a second
-			while(landing_time > (double)ros::Time::now().toSec()){
-				pub_land.publish(empty); //lands the drone
-				//waiting for drone to have landed
-				ros::spinOnce();
-				loop_rate.sleep();
-			}//while landing
+			Instructions = land;
+			do_instruction(land, 4); //starting landing sequence
 			printf("Drone has landed\n");
 			printf("Goodbye\n");	
 			ros::spinOnce();
 			loop_rate.sleep();		
 			exit(0);
 		}
-/*
-		while ((double)ros::Time::now().toSec()< start_time+takeoff_time){ //takeoff
-		
-			pub_takeoff.publish(empty); //launches the drone
-			pub_twist.publish(twist_hover); //drone is flat
-			ROS_INFO("Taking off");
-			ros::spinOnce();
-			loop_rate.sleep();
-			}//while takeoff
+	ros::spinOnce(); //spin to get updated ros values
+	loop_rate.sleep(); //Will sleep to maintain loop_rate
 
-		while  ((double)ros::Time::now().toSec()> start_time+takeoff_time+fly_time){
-		
-			pub_twist.publish(twist_hover); //drone is flat
-			pub_land.publish(empty); //lands the drone
-			ROS_INFO("Landing");
-			
-					
-			if ((double)ros::Time::now().toSec()> takeoff_time+start_time+fly_time+land_time+kill_time){
-		
-				ROS_INFO("Closing Node");
-				//pub_reset.publish(empty); //kills the drone		
-				exit(0); 	}//kill node
-				ros::spinOnce();
-				loop_rate.sleep();			
-			}//while land
-
-		while ( (double)ros::Time::now().toSec()> start_time+takeoff_time && (double)ros::Time::now().toSec()< start_time+takeoff_time+fly_time){	
-		
-
-			if((double)ros::Time::now().toSec()< start_time+takeoff_time+fly_time/2){
-				pub_twist.publish(twist);
-				ROS_INFO("Flying +ve");
-
-			}//fly according to desired twist
-			
-			if((double)ros::Time::now().toSec()> start_time+takeoff_time+fly_time/2){
-				pub_twist.publish(twist_neg);
-				ROS_INFO("Flying -ve");
-
-			}//fly according to desired twist
-			
-			ros::spinOnce();
-			loop_rate.sleep();
-			}
-*/
-	ros::spinOnce();
-	loop_rate.sleep();
-
-}//ros::ok
+	}//ros::ok
 
 }//main
+
+
+
+
+void found_circle(const std_msgs::Bool::ConstPtr& circle_detected)
+{
+	circle = circle_detected->data; //write published value into circle
+	return;
+}
+
+void extract_qr_info(const std_msgs::Int32MultiArray::ConstPtr& qr_info)
+{
+	int i = 0;
+	for(std::vector<int>::const_iterator j = qr_info->data.begin(); j != qr_info->data.end(); ++j)
+	{
+		QR[i] = *j; //saving QR information into QR[]
+		i++;
+	}
+
+	return;
+}
+
+
+void do_instruction(Instructions_state Instruction, double time){
+	
+	double current_time = (double)ros::Time::now().toSec(); //get current time
+	double instruction_time = time + current_time; //define time used for landing before exiting program
+	while ((double)ros::Time::now().toSec() < instruction_time){ //loop while doing instruction
+		if(Instruction == up){					
+			pub_instruct.publish(instruct_up); 
+		}else if(Instruction == down){
+			pub_instruct.publish(instruct_down); 
+		}else if(Instruction == right){
+			pub_instruct.publish(instruct_right); 
+		}else if(Instruction == left){
+			pub_instruct.publish(instruct_left); 
+		}else if(Instruction == forward){
+			pub_instruct.publish(instruct_forward);
+		}else if(Instruction == backward){
+			pub_instruct.publish(instruct_backward);
+		}else if(Instruction == takeoff){
+			pub_instruct.publish(instruct_hover); 		//Send hover command
+			pub_takeoff.publish(empty); 			//launches the drone
+		}else if(Instruction == land){
+			pub_instruct.publish(instruct_hover); 		//Send hover command
+			pub_land.publish(empty); 			//land the drone
+		}else{
+			pub_instruct.publish(instruct_hover); 		//Send hover command
+		}
+		ros::spinOnce();
+		//loop_rate.sleep(); not defined in this scope ------ is it even neccesary?
+	}
+
+}
+
+
+void init_instructions(){
+
+	//hover message
+	instruct_hover.linear.x=0.0; 	//+forward 	-backwards
+	instruct_hover.linear.y=0.0;	//+left		-right
+	instruct_hover.linear.z=0.0;	//+up		-down    	might be inversed
+	instruct_hover.angular.x=0.0;  	//ignore
+	instruct_hover.angular.y=0.0;	//ignore
+	instruct_hover.angular.z=0.0;  	//+turn left	-turn right
+
+	//up message
+	instruct_up.linear.x=0.0; 
+	instruct_up.linear.y=0.0;
+	instruct_up.linear.z=0.3;
+	instruct_up.angular.x=0.0; 
+	instruct_up.angular.y=0.0;
+	instruct_up.angular.z=0.0;
+
+	//down message
+	instruct_up.linear.x=0.0; 
+	instruct_up.linear.y=0.0;
+	instruct_up.linear.z=-0.3;
+	instruct_up.angular.x=0.0; 
+	instruct_up.angular.y=0.0;
+	instruct_up.angular.z=0.0;
+
+	//forward message
+	instruct_forward.linear.x=0.3; 
+	instruct_forward.linear.y=0.0;
+	instruct_forward.linear.z=0.0;
+	instruct_forward.angular.x=0.0; 
+	instruct_forward.angular.y=0.0;
+	instruct_forward.angular.z=0.0;
+
+	//backward message
+	instruct_backward.linear.x=-0.3; 
+	instruct_backward.linear.y=0.0;
+	instruct_backward.linear.z=0.0;
+	instruct_backward.angular.x=0.0; 
+	instruct_backward.angular.y=0.0;
+	instruct_backward.angular.z=0.0;	
+
+	//right message
+	instruct_right.linear.x=0.0; 
+	instruct_right.linear.y=-0.3; 
+	instruct_right.linear.z=0.0; 
+	instruct_right.angular.x=0.0;
+	instruct_right.angular.y=0.0; 
+	instruct_right.angular.z=0.0; 
+
+	//left message
+	instruct_left.linear.x=0.0; 
+	instruct_left.linear.y=0.3; 
+	instruct_left.linear.z=0.0; 
+	instruct_left.angular.x=0.0;
+	instruct_left.angular.y=0.0; 
+	instruct_left.angular.z=0.0; 
+
+	//right spin
+	instruct_right_spin.linear.x=0.0; 
+	instruct_right_spin.linear.y=0.0; 
+	instruct_right_spin.linear.z=0.0; 
+	instruct_right_spin.angular.x=0.0;
+	instruct_right_spin.angular.y=0.0; 
+	instruct_right_spin.angular.z=1.0; 
+
+	//left spin
+	instruct_left_spin.linear.x=0.0; 
+	instruct_left_spin.linear.y=0.0; 
+	instruct_left_spin.linear.z=0.0; 
+	instruct_left_spin.angular.x=0.0;
+	instruct_left_spin.angular.y=0.0; 
+	instruct_left_spin.angular.z=-1.0; 
+}
 

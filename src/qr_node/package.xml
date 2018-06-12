@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rosBridge_driver</name>
+  <name>qr_node</name>
   <version>0.0.0</version>
-  <description>The rosBridge_driver package</description>
+  <description>The qr_node package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/rosBridge_driver</url> -->
+  <!-- <url type="website">http://wiki.ros.org/qr_node</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->

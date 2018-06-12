@@ -82,8 +82,8 @@ int main(int argc, char** argv)
 	pub_reset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1); //publish here to reset drone
 	
 
-	ros::Subscriber circle_sub = node.subscribe ("/Circle_found", 1, found_circle);
-	ros::Subscriber qr_info_sub = node.subscribe("/QR_info_array", 100, extract_qr_info);
+	ros::Subscriber circle_sub = node.subscribe ("/circle_found", 1, found_circle);
+	ros::Subscriber qr_info_sub = node.subscribe("/qr_info_array", 100, extract_qr_info);
 
 	start_time =(double)ros::Time::now().toSec();	 //start timer
 	ROS_INFO("Starting ARdrone_test loop");
@@ -130,6 +130,9 @@ int main(int argc, char** argv)
 					do_instruction(hover, 0.1);
 				}
 				
+				if(circle == 1){
+					std::cout << "Circle found" << std::endl;
+				}
 
 				ros::spinOnce(); //spin to get updated ros values
 				loop_rate.sleep(); //Will sleep to maintain loop_rate

@@ -59,9 +59,8 @@ int main(int argc, char** argv)
 
 	
 	//initializing subscription and publisher
-	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/QR_info_array", 100);
+	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/qr_info_array", 100);
 	ros::Subscriber sub 		= n.subscribe ("/ardrone/image_raw", 1, load_new);
-	//ros::Publisher image_pub 	= n.advertise<sensor_msgs::Image>("/image_converter/output_video", 1);
 
 
 	ros::Rate loop_rate(25);

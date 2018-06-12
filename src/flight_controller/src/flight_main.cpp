@@ -130,9 +130,6 @@ int main(int argc, char** argv)
 					do_instruction(hover, 0.1);
 				}
 				
-				if(circle == 1){
-					std::cout << "Circle found" << std::endl;
-				}
 
 				ros::spinOnce(); //spin to get updated ros values
 				loop_rate.sleep(); //Will sleep to maintain loop_rate
@@ -167,6 +164,8 @@ int main(int argc, char** argv)
 
 			if(job_done){
 				State = Landing;
+				ros::spinOnce(); //spin to get updated ros values
+				loop_rate.sleep(); //Will sleep to maintain loop_rate
 			}
 
 		}else if(State == Landing){

@@ -13,7 +13,7 @@
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
-
+//test1
 using namespace cv;
 using namespace std;
 using namespace zbar;

@@ -13,11 +13,11 @@
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int32MultiArray.h"
-//test1
+
 using namespace cv;
 using namespace std;
 using namespace zbar;
-//test2
+
 sensor_msgs::Image raw_image;
 cv::Mat BGR_im;
 cv::Mat HSV_im;

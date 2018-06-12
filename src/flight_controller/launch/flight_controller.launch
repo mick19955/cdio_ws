@@ -1,5 +1,5 @@
 <launch>
-	<include file="$(tum_ardrone)/tum_ardrone/launch/tum_ardrone.launch"/>
+	<node name="ardrone" pkg="ardrone_autonomy" type="ardrone.driver"/>
 	<node name="qr" pkg="qr_node" type="qr_node"/>
 	<node name="circle_detect" pkg="circle_detect_node" type="circle_detect_node" />
 	<node name="flight_controller" pkg="flight_controller" type="flight_controller" />

@@ -1,3 +1,8 @@
+<!--	
+			CDIO Project 2018
+			Group 2
+			by Robert Sand
+-->
 <launch>
 	<include file="$(find tum_ardrone)/launch/ardrone_driver.launch"/>
 <!--	<node name="ardrone" pkg="ardrone_autonomy" type="ardrone.driver"/> -->

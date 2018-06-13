@@ -1,5 +1,14 @@
+<!--	
+			CDIO Project 2018
+			Group 2
+			by Robert Sand
+-->
 <launch>
+<<<<<<< HEAD
 	<include file="$(find tum_ardrone)/launch/tum_ardrone.launch"/>
+=======
+	<include file="$(find tum_ardrone)/launch/ardrone_driver.launch"/>
+>>>>>>> 43fc011aede58a67a0957d2c54c218a3f101f25b
 <!--	<node name="ardrone" pkg="ardrone_autonomy" type="ardrone.driver"/> -->
 	<node name="qr" pkg="qr_node" type="qr_node"/>
 	<node name="circle_detect" pkg="circle_detect_node" type="circle_detect_node" />

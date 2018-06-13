@@ -43,7 +43,7 @@ ros::Publisher pub_reset;	//publish empty here to reset drone
 
 ros::Publisher pub_instruct;	//publish fly instructions here
 
-enum State_machine {Still, Flying, Landing, Circle, go_to_height};
+enum State_machine {Still, Flying, Landing, Circle};
 enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, hover};
 
 //prototype functions
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv,"ARDrone_test");
     	ros::NodeHandle node;
-    	ros::Rate loop_rate(40);
+    	ros::Rate loop_rate(50);
 
 	State_machine State = Still;
 	Instructions_state Instructions;
@@ -117,11 +117,11 @@ int main(int argc, char** argv)
 
 				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
 				//start centering self to the QR code
-				if((0 < QR[0]) && (-15 <= QR[1]) && (QR[1] <= 15) && (10 <= QR[2]) &&(QR[2] <= 30)){ //if position is correct
-						ROS_INFO("IN CENTER");
-						State = Circle;
-						found_center = true;
-						sleep(1);				
+				if((150 > QR[0]) && (-15 <= QR[1]) && (QR[1] <= 15) && (10 <= QR[2]) &&(QR[2] <= 30)){ //if position is correct
+					ROS_INFO("IN CENTER");
+					State = Circle;
+					found_center = true;
+					sleep(1);				
 				}else if(QR[1] >= 15){ //correcting position relative to the y-axis
 					do_instruction(right, 0.1);
 				}else if(QR[1] <= -15){
@@ -135,8 +135,6 @@ int main(int argc, char** argv)
 				}else if(QR[0] == -2){
 					do_instruction(backward, 0.3);
 				}else{
-					
-
 					//Instructions = hover;
 					//do_instruction(hover, 0.4);
 				} //end if
@@ -164,72 +162,17 @@ int main(int argc, char** argv)
 			std::cout << "State == " << State << std::endl;
 			ROS_INFO("Going for circle!");
 			do_instruction(hover, 1.5);
-			for(int i = 0; i < 15; i++){
-				do_instruction(up, 0.2);
+			for(int i = 0; i < 8; i++){
+				do_instruction(forward, 0.5);
 				do_instruction(hover, 0.1);
+				ros::spinOnce(); //spin to get updated ros values
+				loop_rate.sleep(); //Will sleep to maintain loop_rate
 			}
-			loop_rate.sleep(); //Will sleep to maintain loop_rate
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			do_instruction(forward, 1);
-			do_instruction(hover, 0.3);
-			loop_rate.sleep(); //Will sleep to maintain loop_rate
-			do_instruction(down, 2);
-			State = Flying;
+			State = Landing;
 			bool found_center = false;	
 			bool at_height = false;
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
-		}else if(State == go_to_height){
-			std::cout << "State == " << State << std::endl;
-			while(!at_height){
-				ros::spinOnce(); //spin to get updated ros values
-				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
-						//start centering self to the QR code
-				if((0 < QR[0]) && (-20 <= QR[1]) && (QR[1] <= 20) && (13 <= QR[2])){ //if position is correct			
-						// 0 < QR[0] then tag is prolly spotted 
-						do_instruction(up, 0.4);
-						do_instruction(hover, 0.1);
-						do_instruction(up, 0.4);
-						do_instruction(hover, 0.1);
-						do_instruction(up, 0.4);
-						do_instruction(hover, 0.1);
-						ROS_INFO("READY TO FLY THROUGH CIRCLE");
-						ROS_INFO("READY TO FLY THROUGH CIRCLE");
-						ROS_INFO("READY TO FLY THROUGH CIRCLE");
-						ROS_INFO("READY TO FLY THROUGH CIRCLE");
-						at_height = true;
-						State = Circle;
-									
-				}else if(QR[1] >= 15){ //correcting position relative to the y-axis
-					do_instruction(right, 0.2);
-				}else if(QR[1] <= -15){
-					do_instruction(left, 0.2);
-				}else if(QR[2] >= 30){ //correcting position relative to the y-axis
-					do_instruction(down, 0.2);
-				}else if(QR[2] >= -12){
-					do_instruction(up, 0.2);
-				}else if(QR[0] >= 125 && QR[0] != 0){
-					do_instruction(forward, 0.2);
-				}else if(QR[0] == -2){
-					do_instruction(backward, 0.2);
-				}else{
-					//do nothing		
-				}//end if
-				ros::spinOnce(); //spin to get updated ros values
-			
-				do_instruction(hover, 0.1);
-
-				loop_rate.sleep(); //Will sleep to maintain loop_rate
-			}//end while
-		} //end state if
+		}//end state if
 	ros::spinOnce(); //spin to get updated ros values
 	loop_rate.sleep(); //Will sleep to maintain loop_rate
 

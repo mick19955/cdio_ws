@@ -32,6 +32,7 @@ geometry_msgs::Twist instruct_forward;
 geometry_msgs::Twist instruct_backward;
 geometry_msgs::Twist instruct_right;
 geometry_msgs::Twist instruct_left;
+geometry_msgs::Twist instruct_up_forward;
 
 std_msgs::Empty empty;
 
@@ -43,8 +44,8 @@ ros::Publisher pub_reset;	//publish empty here to reset drone
 
 ros::Publisher pub_instruct;	//publish fly instructions here
 
-enum State_machine {Still, Flying, Landing, Circle};
-enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, hover};
+enum State_machine {Still, Flying, Landing, Circle, Searching};
+enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, up_forward, hover, spin_right, spin_left};
 
 //prototype functions
 void found_circle(const std_msgs::Bool::ConstPtr& circle_detected);
@@ -63,7 +64,7 @@ int main(int argc, char** argv)
 {
 	ros::init(argc, argv,"ARDrone_test");
     	ros::NodeHandle node;
-    	ros::Rate loop_rate(50);
+    	ros::Rate loop_rate(25);
 
 	State_machine State = Still;
 	Instructions_state Instructions;
@@ -92,7 +93,8 @@ int main(int argc, char** argv)
 
 	init_instructions();
 
-	bool found_center = false;	
+	bool found_center = false;
+	bool qr_found = false;	
 	bool at_height = false;	
 	bool go_through = false;
 	while (ros::ok()){
@@ -108,7 +110,7 @@ int main(int argc, char** argv)
 
 			ros::spinOnce();
 			loop_rate.sleep();
-			State = Flying;
+			State = Searching;
 
 		}else if(State == Flying){
 			std::cout << "State == " << State << std::endl;
@@ -117,23 +119,23 @@ int main(int argc, char** argv)
 
 				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
 				//start centering self to the QR code
-				if((150 > QR[0]) && (-15 <= QR[1]) && (QR[1] <= 15) && (10 <= QR[2]) &&(QR[2] <= 30)){ //if position is correct
+				if((155 > QR[0]) && (-10 <= QR[1]) && (QR[1] <= 10) && (30 <= QR[2]) &&(QR[2] <= 40)){ //if position is correct
 					ROS_INFO("IN CENTER");
 					State = Circle;
 					found_center = true;
 					sleep(1);				
-				}else if(QR[1] >= 15){ //correcting position relative to the y-axis
+				}else if(QR[1] >= 8){ //correcting position relative to the y-axis
 					do_instruction(right, 0.1);
-				}else if(QR[1] <= -15){
+				}else if(QR[1] <= -8){
 					do_instruction(left, 0.1);
-				}else if(QR[2] >= 30){ //correcting position relative to the y-axis
+				}else if(QR[2] >= 40){ //correcting position relative to the y-axis
 					do_instruction(down, 0.1);
-				}else if(QR[2] <= 10){
+				}else if((QR[2] <= 30) && (QR[2] != 0)){
 					do_instruction(up, 0.1);
-				}else if(QR[0] >= 125 && QR[0] != 0){
-					do_instruction(forward, 0.3);
+				}else if(QR[0] >= 155 && QR[0] != 0){
+					do_instruction(forward, 0.25);
 				}else if(QR[0] == -2){
-					do_instruction(backward, 0.3);
+					do_instruction(backward, 0.25);
 				}else{
 					//Instructions = hover;
 					//do_instruction(hover, 0.4);
@@ -162,9 +164,9 @@ int main(int argc, char** argv)
 			std::cout << "State == " << State << std::endl;
 			ROS_INFO("Going for circle!");
 			do_instruction(hover, 1.5);
-			for(int i = 0; i < 8; i++){
-				do_instruction(forward, 0.5);
-				do_instruction(hover, 0.1);
+			for(int i = 0; i < 10; i++){
+				do_instruction(up_forward, 0.3);
+				//do_instruction(hover, 0.2);
 				ros::spinOnce(); //spin to get updated ros values
 				loop_rate.sleep(); //Will sleep to maintain loop_rate
 			}
@@ -172,7 +174,38 @@ int main(int argc, char** argv)
 			bool found_center = false;	
 			bool at_height = false;
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
-		}//end state if
+		}else if (State == Searching){
+			std::cout << "State == " << State << std::endl;
+			int i = 0;
+			while(!qr_found){//Searching for QR
+
+				do_instruction(spin_right, 0.1);
+				do_instruction(hover, 1);
+				for(int j = 0; j < 20; j++){	
+					ros::spinOnce(); //spin to get updated ros values
+					if(QR[0] != 0){
+						i++;
+					}
+				}
+
+				std::cout << "i was found " << i << std::endl;
+
+				
+
+				if(i > 5){ //reliable qr found
+					qr_found = true;
+					State = Flying;
+					do_instruction(spin_right, 0.1);
+				}
+
+				i = 0; //resetting i
+
+
+
+				ros::spinOnce(); //spin to get updated ros values
+				loop_rate.sleep(); //Will sleep to maintain loop_rate
+			}//!qr_found
+		}//end state_machine if
 	ros::spinOnce(); //spin to get updated ros values
 	loop_rate.sleep(); //Will sleep to maintain loop_rate
 
@@ -225,35 +258,18 @@ void do_instruction(Instructions_state Instruction, double time){
 		}else if(Instruction == land){
 			pub_instruct.publish(instruct_hover); 		//Send hover command
 			pub_land.publish(empty); 			//land the drone
+		}else if(Instruction == up_forward){
+			pub_instruct.publish(instruct_up_forward); 		//Send hover command
+		}else if(Instruction == spin_right){
+			pub_instruct.publish(instruct_right_spin); 		//Send spin command
 		}else{
 			pub_instruct.publish(instruct_hover); 		//Send hover command
+			//ROS_INFO("wrong instruction given, hovering");
 		}
 		ros::spinOnce();
 
 		//loop_rate.sleep(); not defined in this scope ------ is it even neccesary?
 	}
-	/*current_time = (double)ros::Time::now().toSec(); //get current time
-	instruction_time = 0.05 + current_time; //define time used for landing before exiting program
-
-	while ((double)ros::Time::now().toSec() < instruction_time){ //do reverse instruction for stability
-		if(Instruction == up){					
-			pub_instruct.publish(instruct_down); 
-		}else if(Instruction == down){
-			pub_instruct.publish(instruct_up); 
-		}else if(Instruction == right){
-			pub_instruct.publish(instruct_left); 
-		}else if(Instruction == left){
-			pub_instruct.publish(instruct_right); 
-		}else if(Instruction == forward){
-			pub_instruct.publish(instruct_backward);
-		}else if(Instruction == backward){
-			pub_instruct.publish(instruct_forward);
-		}else{
-			pub_instruct.publish(instruct_hover); 		//Send hover command
-		}
-		ros::spinOnce();
-		//loop_rate.sleep(); not defined in this scope ------ is it even neccesary?
-	}*/
 
 	return;
 }
@@ -323,7 +339,7 @@ void init_instructions(){
 	instruct_right_spin.linear.z=0.0; 
 	instruct_right_spin.angular.x=0.0;
 	instruct_right_spin.angular.y=0.0; 
-	instruct_right_spin.angular.z=1.0; 
+	instruct_right_spin.angular.z=0.5; 
 
 	//left spin
 	instruct_left_spin.linear.x=0.0; 
@@ -331,6 +347,15 @@ void init_instructions(){
 	instruct_left_spin.linear.z=0.0; 
 	instruct_left_spin.angular.x=0.0;
 	instruct_left_spin.angular.y=0.0; 
-	instruct_left_spin.angular.z=-1.0; 
+	instruct_left_spin.angular.z=-0.5; 
+
+
+	//up & forward message
+	instruct_up_forward.linear.x=0.2; 
+	instruct_up_forward.linear.y=0.0;
+	instruct_up_forward.linear.z=0.05;
+	instruct_up_forward.angular.x=0.0; 
+	instruct_up_forward.angular.y=0.0;
+	instruct_up_forward.angular.z=0.0;
 }
 

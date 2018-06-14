@@ -114,7 +114,8 @@ int main(int argc, char** argv)
 			//do_instruction(hover, 1); //startup sequence
 			ros::spinOnce();
 			loop_rate.sleep();
-			State = Searching;
+//			State = Searching;
+			State = Flying;
 
 		}else if(State == Flying){
 			std::cout << "State == " << State << std::endl;
@@ -197,7 +198,7 @@ int main(int argc, char** argv)
 				} //end for
 
 				if(!qr_found) {
-					do_instruction(spin_right, 0.6);
+					do_instruction(spin_left, 0.6);
 					do_instruction(hover, 2);
 				} //end if !qr_found
 				
@@ -214,12 +215,7 @@ int main(int argc, char** argv)
 			do_instruction(hover, 2);
 				if(QR[0] != 0){ //Found QR code
 					qr_found = true;
-<<<<<<< HEAD
-					State = Flying;
-					do_instruction(spin_right, 0.1);
-=======
 					State = Landing;
->>>>>>> e3705e12c8411c588f510aaefc407a7602189145
 				}
 			ros::spinOnce(); //spin to get updated ros values
 			loop_rate.sleep(); //Will sleep to maintain loop_rate

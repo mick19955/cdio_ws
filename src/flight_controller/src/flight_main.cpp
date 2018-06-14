@@ -1,10 +1,19 @@
 /*
-Parker Conroy
-Algorithmic Robotics Lab @ University of Utah
 
+	Original template by:	Parker Conroy
+												Algorithmic Robotics Lab @ University of Utah
 
-This code actuates the AR Drone back and forth.
-It is intended as a simple example for those starting with the AR Drone platform.
+												This code actuates the AR Drone back and forth.
+												It is intended as a simple example for those starting with the AR Drone platform.
+												
+	Edited by:	Group 2, 62410 CDIO, DTU Diplom
+							Mikkel Ambjørn Boholdt-Pedersen
+							Emily Skovgaard Rasmussen
+							Nicolai André Stæhr Kruhøffer
+							Jørn Salonin
+							Simon Lundorf
+							Robert Sand
+
 */
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>

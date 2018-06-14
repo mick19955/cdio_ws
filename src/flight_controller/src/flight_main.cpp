@@ -110,7 +110,8 @@ int main(int argc, char** argv)
 
 			ros::spinOnce();
 			loop_rate.sleep();
-			State = Searching;
+//			State = Searching;
+			State = Flying;
 
 		}else if(State == Flying){
 			std::cout << "State == " << State << std::endl;

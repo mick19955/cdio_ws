@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 				if(i > 5){ //reliable qr found
 					qr_found = true;
 					State = Flying;
-					do_instruction(spin_right, 0.2);
+					do_instruction(spin_right, 0.1);
 				}
 
 				i = 0; //resetting i

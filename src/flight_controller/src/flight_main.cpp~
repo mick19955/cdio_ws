@@ -1,10 +1,19 @@
 /*
-Parker Conroy
-Algorithmic Robotics Lab @ University of Utah
 
+	Original template by:	Parker Conroy
+												Algorithmic Robotics Lab @ University of Utah
 
-This code actuates the AR Drone back and forth.
-It is intended as a simple example for those starting with the AR Drone platform.
+												This code actuates the AR Drone back and forth.
+												It is intended as a simple example for those starting with the AR Drone platform.
+												
+	Edited by:	Group 2, 62410 CDIO, DTU Diplom
+							Mikkel Ambjørn Boholdt-Pedersen
+							Emily Skovgaard Rasmussen
+							Nicolai André Stæhr Kruhøffer
+							Jørn Salonin
+							Simon Lundorf
+							Robert Sand
+
 */
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
@@ -33,6 +42,7 @@ geometry_msgs::Twist instruct_backward;
 geometry_msgs::Twist instruct_right;
 geometry_msgs::Twist instruct_left;
 geometry_msgs::Twist instruct_up_forward;
+geometry_msgs::Twist instruct_down_forward;
 
 std_msgs::Empty empty;
 
@@ -45,7 +55,7 @@ ros::Publisher pub_reset;	//publish empty here to reset drone
 ros::Publisher pub_instruct;	//publish fly instructions here
 
 enum State_machine {Still, Flying, Landing, Circle, Searching, Position_left, Prepare_for_next};
-enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, up_forward, hover, spin_right, spin_left};
+enum Instructions_state {up, down, left, right, forward, backward, takeoff, land, up_forward, down_forward, hover, spin_right, spin_left};
 
 //prototype functions
 void found_circle(const std_msgs::Bool::ConstPtr& circle_detected);
@@ -54,6 +64,8 @@ void extract_qr_info(const std_msgs::Int32MultiArray::ConstPtr& qr_info);
 void do_instruction(Instructions_state instruction, double time);
 
 int circle = 0; //info if circle is found or not
+int search_counter = 0;
+int circle_counter = 0;
 
 
 //std::array<int,20> QR; TODO: implement QR info into c++ array
@@ -108,20 +120,17 @@ int main(int argc, char** argv)
 			
 			do_instruction(takeoff, 5);
 
-			//do_instruction(forward, 2.3); //startup sequence
-			//do_instruction(hover, 1); //startup sequence
-			//do_instruction(left, 1); //startup sequence
-			//do_instruction(hover, 1); //startup sequence
 			ros::spinOnce();
 			loop_rate.sleep();
-//			State = Searching;
-			State = Flying;
+		//	State = Searching;
+		//	State = Flying;
+			State = Prepare_for_next;
 
 		}else if(State == Flying){
+	//		do_instruction(hover,2);
 			std::cout << "State == " << State << std::endl;
 
 			while(!found_center){
-
 				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
 				//start centering self to the QR code
 				if((160 > QR[0]) && (-10 <= QR[1]) && (QR[1] <= 10) && (25 <= QR[2]) &&(QR[2] <= 45)){ //if position is correct
@@ -166,6 +175,7 @@ int main(int argc, char** argv)
 			loop_rate.sleep();		
 			exit(0);
 		}else if(State == Circle){
+			do_instruction(hover,2);
 			std::cout << "State == " << State << std::endl;
 			ROS_INFO("Going for circle!");
 			do_instruction(hover, 1.5);
@@ -174,12 +184,15 @@ int main(int argc, char** argv)
 			do_instruction(hover, 1);
 			ros::spinOnce(); //spin to get updated ros values
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
-			
-			State = Searching;
+			search_counter = 0;
+		//	State = Searching;
+			circle_counter++;
+			State = Prepare_for_next;
 			bool found_center = false;	
 			bool at_height = false;
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
 		}else if (State == Searching){
+		do_instruction(hover,2);
 			std::cout << "State == " << State << std::endl;
 			int i = 0;
 			int k = 0;
@@ -189,7 +202,7 @@ int main(int argc, char** argv)
 					if(QR[0] != 0){
 						i++;
 						std::cout << "QR was found, i = " << i << std::endl;
-						if(i >= 5){ //reliable qr found (5 times)
+						if(i >= 2){ //reliable qr found (5 times)
 							qr_found = true;
 							std::cout << "QR was found after " << j << " for-loops" << std::endl;
 							break;
@@ -198,9 +211,24 @@ int main(int argc, char** argv)
 				} //end for
 
 				if(!qr_found) {
-					do_instruction(spin_left, 0.6);
+					if(search_counter < 2) {
+					std::cout << "counter under 2";
+					do_instruction(spin_left, 0.7);
+					do_instruction(spin_right, 0.1);
 					do_instruction(hover, 2);
-				} //end if !qr_found
+					search_counter++;
+					} else if(search_counter < 6) {
+					std::cout << "counter under 6";
+					do_instruction(spin_right, 0.7);
+					do_instruction(spin_left, 0.1);
+					do_instruction(hover,2);
+					search_counter++;
+					} else {
+					std::cout << "else";
+					do_instruction(spin_right, 0.7);
+					do_instruction(spin_left, 0.1);
+					do_instruction(hover, 2);
+				}} //end if !qr_found
 				
 				i = 0; //resetting i
 
@@ -209,7 +237,8 @@ int main(int argc, char** argv)
 			} //end while !qr_found
 			
 			State = Flying;
-		}else if (State == Position_left){
+		} else if (State == Position_left){
+			do_instruction(hover,2);
 			while(!qr_found){
 			do_instruction(left, 0.5);
 			do_instruction(hover, 2);
@@ -223,13 +252,34 @@ int main(int argc, char** argv)
 			//end while !qr_found
 		}else if(State == Prepare_for_next){//end state_machine if
 
-			do_instruction(down, 1);
-			do_instruction(hover, 1);
-			do_instruction(spin_left, 0.5);
-			do_instruction(hover, 1);
-			do_instruction(forward, 1.5);
-
+			if ( circle_counter == 0) {
+			std::cout << "DEEEEEEEEEERP";
+			do_instruction(forward, 2.3); //startup sequence
+			do_instruction(hover, 1); //startup sequence
+			do_instruction(left, 1); //startup sequence
+			do_instruction(hover, 1); //startup sequence
 			State = Searching;
+			} else if (circle_counter ==  1) {
+			do_instruction(spin_left, 0.6);
+			do_instruction(hover, 1);
+			do_instruction(down_forward, 2.3);	
+			
+			
+			State = Searching;
+			} else if (circle_counter == 2) {
+			do_instruction(spin_left, 0.6);
+			do_instruction(hover, 1);
+			do_instruction(down_forward, 2.3);	
+			
+			State = Searching;
+			}
+		//	do_instruction(down, 1);
+		//	do_instruction(hover, 1);
+		//	do_instruction(spin_left, 0.5);
+		//	do_instruction(hover, 1);
+		//	do_instruction(forward, 1.5);
+
+		//	State = Searching;
 			ros::spinOnce(); //spin to get updated ros values
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
 		}
@@ -287,6 +337,8 @@ void do_instruction(Instructions_state Instruction, double time){
 			pub_land.publish(empty); 			//land the drone
 		}else if(Instruction == up_forward){
 			pub_instruct.publish(instruct_up_forward); 		//Send hover command
+		}else if(Instruction == down_forward){
+			pub_instruct.publish(instruct_down_forward);
 		}else if(Instruction == spin_right){
 			pub_instruct.publish(instruct_right_spin); 		//Send spin command
 			//std::cout << "right_spin" << std::endl;
@@ -377,8 +429,9 @@ void init_instructions(){
 	instruct_left_spin.linear.y=0.0; 
 	instruct_left_spin.linear.z=0.0; 
 	instruct_left_spin.angular.x=0.0;
-	instruct_left_spin.angular.y=0.0; 
-	instruct_left_spin.angular.z=-0.6; 
+	instruct_left_spin.angular.y=0.0;
+	instruct_left_spin.angular.z=-0.3;  
+	//instruct_left_spin.angular.z=-0.6; 
 
 
 	//up & forward message
@@ -388,5 +441,14 @@ void init_instructions(){
 	instruct_up_forward.angular.x=0.0; 
 	instruct_up_forward.angular.y=0.0;
 	instruct_up_forward.angular.z=0.0;
+	
+	
+	//down & forward message
+	instruct_down_forward.linear.x=0.2; 
+	instruct_down_forward.linear.y=0.0;
+	instruct_down_forward.linear.z=-0.1;
+	instruct_down_forward.angular.x=0.0; 
+	instruct_down_forward.angular.y=0.0;
+	instruct_down_forward.angular.z=0.0;
 }
 

@@ -4,6 +4,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+//#include <opencv2/stitching/detail/exposure_compensate.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -78,6 +79,11 @@ int main(int argc, char** argv)
 
 			//cloning the image for so we can work with BGR
 			orig_image = BGR_im.clone();
+  		
+  		//testing Exposure compensation
+//	  	cv::detail::ExposureCompensator* ExpCom;
+//	  	cv::Point2i point = ((Point2i)0,(Point2i) 0);
+//	 		ExpCom->apply(0, point, orig_image, 0);
   
 			// Finding QR codes from orig_image
 			decode(orig_image, decodedObjects);

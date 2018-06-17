@@ -55,8 +55,6 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "qr");
   	
 	ros::NodeHandle n;
-
-
 	
 	//initializing subscription and publisher
 	ros::Publisher QR_info_pub 	= n.advertise<std_msgs::Int32MultiArray>("/qr_info_array", 100);
@@ -94,7 +92,6 @@ int main(int argc, char** argv)
 			cv::imshow("Detected red circles and QR", orig_image);
 
 			cv::waitKey(1);
-			
 		}
 		else
 		{

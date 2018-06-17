@@ -150,11 +150,11 @@ int main(int argc, char** argv)
 			ROS_INFO("Going for circle!");
 			do_instruction(hover, 0.5);
 			
-			do_instruction(up_forward, 2.4);
+			do_instruction(up_forward, 2.5);
 			do_instruction(hover, 1);
+			do_instruction(down, 1.5);
 			ros::spinOnce(); //spin to get updated ros values
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
-			search_counter = 0;
 		//	State = Searching;
 			circle_counter += 1;
 			State = Prepare_for_next;
@@ -166,33 +166,32 @@ int main(int argc, char** argv)
 			std::cout << "State == Seaching" << State << std::endl;
 			int i = 0;
 			int k = 0;
+			search_counter = 0;
 			while(!qr_found){//Searching for QR
-				
+				do_instruction(hover, 0.5);
 				if(QR[0] != 0){
 					qr_found = true;
 				}	//end if QR[0] != 0			
-			
+				do_instruction(hover, 0.5);
 				if(!qr_found) {
 					if(search_counter < 3) {
 					//std::cout << "counter under 2";
 					do_instruction(spin_left, 0.7);
 					do_instruction(spin_right, 0.07);
-					do_instruction(hover, 2);
-
-					} else if(search_counter < 6) {
-					//std::cout << "counter under 6";
+					std::cout << "spinning right" << std::endl;
+					}else if(search_counter < 6) {
 					do_instruction(spin_right, 0.7);
 					do_instruction(spin_left, 0.07);
-					do_instruction(hover,2);
-					//search_counter++;
-					} 
-					search_counter++;
+					std::cout << "spinning left" << std::endl;
+					}
+					search_counter+=1;
+					std::cout << "search counter = "<< search_counter << std::endl;
 					if(search_counter == 7){
 						search_counter = 0;
 					}
-					do_instruction(hover, 2.5);
+					do_instruction(hover, 0.5);
 				} //end if !qr_found
-				search_counter = 0;
+
 				i = 0; //resetting i
 
 				ros::spinOnce(); //spin to get updated ros values
@@ -203,8 +202,10 @@ int main(int argc, char** argv)
 		}else if(State == Prepare_for_next){//end state_machine if
 			std::cout << "State == Prep" << State << std::endl;
 			if ( circle_counter == 0) {
-				do_instruction(forward, 1.4); //startup sequence
+				//do_instruction(forward, 1.4); //point straight at circle
+				do_instruction(forward, 1.3); //point straight at circle
 				do_instruction(hover, 1); //startup sequence
+				do_instruction(left, 1.1); //point straight at circle
 				//do_instruction(left, 1); //startup sequence
 				//do_instruction(hover, 1); //startup sequence
 				State = Flying;
@@ -212,13 +213,12 @@ int main(int argc, char** argv)
 				//do_instruction(spin_left, 0.6);
 				do_instruction(hover, 1);
 				//do_instruction(down_forward, 2);	
-				do_instruction(down, 1.5);
+
 				State = Searching;
 			} else if (circle_counter == 2) {
 				do_instruction(spin_left, 0.5);
 				do_instruction(hover, 1);
 				//do_instruction(down_forward, 2);	
-				do_instruction(down, 1.2);
 				//do_instruction(forward, 0.);	
 			
 				State = Searching;

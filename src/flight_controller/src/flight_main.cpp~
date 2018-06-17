@@ -110,24 +110,24 @@ int main(int argc, char** argv)
 					found_center = true;
 						
 				}else if(QR[1] >= 8){ //correcting position relative to the y-axis
-					do_instruction(right, 0);
+					do_instruction(right, 0.1);
 				}else if(QR[1] <= -8){
-					do_instruction(left, 0);
+					do_instruction(left, 0.1);
 				}else if(QR[2] >= 35){ //correcting position relative to the y-axis
-					do_instruction(down, 0);
+					do_instruction(down, 0.1);
 				}else if((QR[2] <= 25) && (QR[2] != 0)){
-					do_instruction(up, 0);
+					do_instruction(up, 0.1);
 				}else if((QR[0] >= 180) && (QR[0] != 0)){
-					do_instruction(forward, 0);
+					do_instruction(forward, 0.1);
 				}else if(QR[0] == -2){
-					do_instruction(backward, 0);
+					do_instruction(backward, 0.1);
 				}else{
-					do_instruction(hover, 0.0);
+					do_instruction(hover, 0);
 				} //end if
 
 				ros::spinOnce(); //spin to get updated ros values
 			
-				//do_instruction(hover, 0.1);
+				do_instruction(hover, 0.1);
 
 
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
@@ -167,39 +167,32 @@ int main(int argc, char** argv)
 			int i = 0;
 			int k = 0;
 			while(!qr_found){//Searching for QR
-				//for(int j = 0; j < 150; j++){	
-				//	ros::spinOnce(); //spin to get updated ros values
-					if(QR[0] != 0){
-				//		i++;
-				//		std::cout << "QR was found, i = " << i << std::endl;
-				//		if(i >= 2){ //reliable qr found (5 times)
-							qr_found = true;
-				//			std::cout << "QR was found after " << j << " for-loops" << std::endl;
-				//			break;
-				//		}	//end if i > 5	
-					}	//end if QR[0] != 0			
-				//} //end for
-
+				
+				if(QR[0] != 0){
+					qr_found = true;
+				}	//end if QR[0] != 0			
+			
 				if(!qr_found) {
-					if(search_counter < 2) {
+					if(search_counter < 3) {
 					//std::cout << "counter under 2";
 					do_instruction(spin_left, 0.7);
-					//do_instruction(spin_right, 0.07);
+					do_instruction(spin_right, 0.07);
 					do_instruction(hover, 2);
-					search_counter++;
+
 					} else if(search_counter < 6) {
 					//std::cout << "counter under 6";
 					do_instruction(spin_right, 0.7);
-					//do_instruction(spin_left, 0.07);
+					do_instruction(spin_left, 0.07);
 					do_instruction(hover,2);
 					//search_counter++;
-					} else {
-					std::cout << "else";
-					do_instruction(spin_right, 0.7);
-					//do_instruction(spin_left, 0.07);
-					do_instruction(hover, 2);
-				}} //end if !qr_found
-				
+					} 
+					search_counter++;
+					if(search_counter == 7){
+						search_counter = 0;
+					}
+					do_instruction(hover, 2.5);
+				} //end if !qr_found
+				search_counter = 0;
 				i = 0; //resetting i
 
 				ros::spinOnce(); //spin to get updated ros values
@@ -210,7 +203,7 @@ int main(int argc, char** argv)
 		}else if(State == Prepare_for_next){//end state_machine if
 			std::cout << "State == Prep" << State << std::endl;
 			if ( circle_counter == 0) {
-				do_instruction(forward, 1.2); //startup sequence
+				do_instruction(forward, 1.4); //startup sequence
 				do_instruction(hover, 1); //startup sequence
 				//do_instruction(left, 1); //startup sequence
 				//do_instruction(hover, 1); //startup sequence
@@ -222,11 +215,11 @@ int main(int argc, char** argv)
 				do_instruction(down, 1.5);
 				State = Searching;
 			} else if (circle_counter == 2) {
-				do_instruction(spin_left, 0.8);
-				//do_instruction(hover, 1);
+				do_instruction(spin_left, 0.5);
+				do_instruction(hover, 1);
 				//do_instruction(down_forward, 2);	
 				do_instruction(down, 1.2);
-				do_instruction(forward, 0.);	
+				//do_instruction(forward, 0.);	
 			
 				State = Searching;
 			}

@@ -30,8 +30,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include <stdint.h>
 
 // The maximum memory allocation
-#define MAX_STREAM_WIDTH 640
-#define MAX_STREAM_HEIGHT 360
+#define MAX_STREAM_WIDTH 1280
+#define MAX_STREAM_HEIGHT 720
 
 /** Drone 1 */
 
@@ -55,8 +55,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 /** Drone 2 */
 
 // NO PIP, Both camera streams provide the same reseloution: Simple!
-#define D2_STREAM_WIDTH 640
-#define D2_STREAM_HEIGHT 360
+#define D2_STREAM_WIDTH 1280
+#define D2_STREAM_HEIGHT 720
 
 extern video_com_multisocket_config_t icc;
 extern const vp_api_stage_funcs_t vp_stages_export_funcs;

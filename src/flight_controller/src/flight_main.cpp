@@ -51,7 +51,7 @@ int circle = 0; //info if circle is found or not
 int search_counter = 0;
 int circle_counter = 0;
 int inst_status = 0;
-
+bool qr_lost = false;
 int QR[3];
 
 
@@ -100,30 +100,49 @@ int main(int argc, char** argv)
 		}else if(State == Flying){
 	//		do_instruction(hover,2);
 			std::cout << "State == Flying" << State << std::endl;
-
+			int qr_not_found = 0;
+			found_center = false;
+			qr_lost = false;
 			while(!found_center){
 				std::cout << QR[0] << "  <-  k  = 0 ||\t" << QR[1] << "  <-  k  = 1 ||\t" << QR[2] << "  <-  k  = 2 " << std::endl;
 				//start centering self to the QR code
-				if((185 > QR[0]) && (-10 <= QR[1]) && (QR[1] <= 10) && (25 <= QR[2]) &&(QR[2] <= 45)){ //if position is correct
+				if((185 > QR[0]) && (-15 <= QR[1]) && (QR[1] <= 15) && (25 <= QR[2]) &&(QR[2] <= 45)){ //if position is correct
 					ROS_INFO("IN CENTER");
 					State = Circle;
 					found_center = true;
+					qr_not_found = 0;
 						
 				}else if(QR[1] >= 8){ //correcting position relative to the y-axis
 					do_instruction(right, 0.1);
+					qr_not_found = 0;
 				}else if(QR[1] <= -8){
 					do_instruction(left, 0.1);
+					qr_not_found = 0;
 				}else if(QR[2] >= 35){ //correcting position relative to the y-axis
 					do_instruction(down, 0.1);
+					qr_not_found = 0;
 				}else if((QR[2] <= 25) && (QR[2] != 0)){
 					do_instruction(up, 0.1);
+					qr_not_found = 0;
 				}else if((QR[0] >= 180) && (QR[0] != 0)){
 					do_instruction(forward, 0.1);
+					qr_not_found = 0;
 				}else if(QR[0] == -2){
 					do_instruction(backward, 0.1);
+					qr_not_found = 0;
 				}else{
 					do_instruction(hover, 0);
 				} //end if
+
+				if(QR[0] == 0){
+					qr_not_found+=1;
+				}
+			std::cout << "qr_not_found = " << qr_not_found  << std::endl;
+				if(qr_not_found > 150){
+					State = Searching;
+					found_center = true;
+					qr_lost = true;
+				}
 
 				ros::spinOnce(); //spin to get updated ros values
 			
@@ -150,84 +169,119 @@ int main(int argc, char** argv)
 			ROS_INFO("Going for circle!");
 			do_instruction(hover, 0.5);
 			
-			do_instruction(up_forward, 2.5);
+			do_instruction(up_forward, 2.2); //was 2.5
 			do_instruction(hover, 1);
 			do_instruction(down, 1.5);
 			ros::spinOnce(); //spin to get updated ros values
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
 		//	State = Searching;
-			circle_counter += 1;
 			State = Prepare_for_next;
 			bool found_center = false;	
 			bool at_height = false;
 			loop_rate.sleep(); //Will sleep to maintain loop_rate
 		}else if (State == Searching){
-			//do_instruction(hover, 2);
+			do_instruction(hover, 1);
 			std::cout << "State == Seaching" << State << std::endl;
 			int i = 0;
 			int k = 0;
+			int trials = 0;
 			search_counter = 0;
+			qr_found = false;
+			while(qr_lost){
+				std::cout << "qr_lost" << std::endl;
+				do_instruction(hover, 1);
+				if(QR[0] != 0){
+					qr_lost = false;
+					qr_found = true;
+					State = Flying;
+				}
+				if(search_counter < 2) {
+					do_instruction(left, 0.20);
+					search_counter += 1;
+					std::cout << "panning right" << std::endl;
+				}else if(search_counter < 6) {
+					do_instruction(right, 0.20);
+					search_counter += 1;
+					std::cout << "panning left" << std::endl;
+				}else{
+					do_instruction(forward, 0.25);
+					search_counter = 0;
+					trials += 1;
+					if(trials > 2){
+						qr_lost = false; //to break and go to spin search
+					}
+				}
+			}
+
 			while(!qr_found){//Searching for QR
+				std::cout << "!qr_found" << std::endl;
 				do_instruction(hover, 0.5);
 				if(QR[0] != 0){
 					qr_found = true;
+					State = Flying;
 				}	//end if QR[0] != 0			
 				do_instruction(hover, 0.5);
 				if(!qr_found) {
 					if(search_counter < 3) {
 					//std::cout << "counter under 2";
-					do_instruction(spin_left, 0.7);
-					do_instruction(spin_right, 0.07);
-					std::cout << "spinning right" << std::endl;
-					}else if(search_counter < 6) {
-					do_instruction(spin_right, 0.7);
-					do_instruction(spin_left, 0.07);
-					std::cout << "spinning left" << std::endl;
+						do_instruction(spin_left, 1);
+						std::cout << "spinning right" << std::endl;
+					}else if(3 < search_counter) {
+						do_instruction(spin_right, 1);
+						std::cout << "spinning left" << std::endl;
 					}
 					search_counter+=1;
 					std::cout << "search counter = "<< search_counter << std::endl;
-					if(search_counter == 7){
-						search_counter = 0;
-					}
+		
 					do_instruction(hover, 0.5);
 				} //end if !qr_found
 
-				i = 0; //resetting i
 
 				ros::spinOnce(); //spin to get updated ros values
 				loop_rate.sleep(); //Will sleep to maintain loop_rate
 			} //end while !qr_found
-			found_center = false;
-			State = Flying;
+			//State = Searching;
 		}else if(State == Prepare_for_next){//end state_machine if
 			std::cout << "State == Prep" << State << std::endl;
 			if ( circle_counter == 0) {
-				//do_instruction(forward, 1.4); //point straight at circle
-				do_instruction(forward, 1.3); //point straight at circle
+				do_instruction(forward, 1.5); //point straight at circle
+				//do_instruction(forward, 1.3); //point straight at circle
 				do_instruction(hover, 1); //startup sequence
-				do_instruction(left, 1.1); //point straight at circle
+				//do_instruction(left, 1.1); //point straight at circle
 				//do_instruction(left, 1); //startup sequence
 				//do_instruction(hover, 1); //startup sequence
+				circle_counter += 1;
 				State = Flying;
-			} else if (circle_counter ==  1) {
-				//do_instruction(spin_left, 0.6);
+			}else if(circle_counter ==  1) {
+				do_instruction(spin_left, 0.6);
+				do_instruction(hover, 1);
+				do_instruction(down, 1);
+				do_instruction(hover, 1);
+				do_instruction(forward, 1);
 				do_instruction(hover, 1);
 				//do_instruction(down_forward, 2);	
-
+				circle_counter += 1;
 				State = Searching;
-			} else if (circle_counter == 2) {
+			}else if(circle_counter == 2) {
 				do_instruction(spin_left, 0.5);
 				do_instruction(hover, 1);
-				//do_instruction(down_forward, 2);	
-				//do_instruction(forward, 0.);	
+				do_instruction(down, 1);
+				do_instruction(hover, 1);
+				do_instruction(forward, 0.6);
+				do_instruction(hover, 1);
+				circle_counter += 1;
+				State = Searching;
+			}else if(circle_counter == 2) {
+
+				do_instruction(forward, 0.7);
+				do_instruction(hover, 1);
+				do_instruction(spin_left, 1.5);
+				do_instruction(hover, 1);
+				do_instruction(down, 1);
+				do_instruction(hover, 1);
 			
 				State = Searching;
 			}
-		//	do_instruction(down, 1);
-		//	do_instruction(hover, 1);
-		//	do_instruction(spin_left, 0.5);
-		//	do_instruction(hover, 1);
-		//	do_instruction(forward, 1.5);
 
 		//	State = Searching;
 			ros::spinOnce(); //spin to get updated ros values

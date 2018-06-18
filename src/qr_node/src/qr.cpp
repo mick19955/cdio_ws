@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 	ros::Subscriber sub 		= n.subscribe ("/ardrone/image_raw", 1, load_new);
 
 
-	ros::Rate loop_rate(25);
+	ros::Rate loop_rate(50);
 
 	init_distance(); //initializes crazy stupid array
 

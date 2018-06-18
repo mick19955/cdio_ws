@@ -1,0 +1,22 @@
+# Connect via Telnet:
+
+telnet 192.168.1.1
+
+# Change directory to data:
+
+cd data
+
+# Create the ch3.sh file by typing:
+
+cat > ch3.sh
+
+# Copy-paste the contents of ch3.sh into the terminal.
+# End by pressing CTRL-D.
+#
+# After creating the ch3.sh file on the drone:
+
+chmod 755 /ch3.sh
+
+# To run it, and change channel by typing the following from telnet after every power up:
+
+./data/ch3.sh

@@ -1,11 +1,12 @@
 /*			
-	Written by:	Group 2, 62410 CDIO, DTU Diplom
+	Edited by:	Group 2, 62410 CDIO, DTU Diplom
 							Mikkel Ambjørn Boholdt-Pedersen
 							Emily Skovgaard Rasmussen
 							Nicolai André Stæhr Kruhøffer
 							Jørn Salonin
 							Simon Lundorf
 							Robert Sand
+							
 	This code will scan the videofeed frame by frame, for QR codes
 	If a code is found then the text from the QR code will be translated
 	Furthermore an approximate of the distance to the QR code will be calculated as well as a left-right
@@ -13,11 +14,9 @@
 	
 	The found QR code will be outlined on a GUi window
 	
-	All the extracted data will be published in a int array at "/qr_info_array"
+	All the extracted data will be published in an int array at "/qr_info_array"
 	
-	The math and calculations used to determine the distance and displacement of the drone, was taken from the
-	following github
-	https://github.com/andreaslorentzen/dronemis2.0
+	Original implementation by: https://github.com/andreaslorentzen/dronemis2.0
 */
 
 #include <ros/ros.h>

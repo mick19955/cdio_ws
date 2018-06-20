@@ -1,3 +1,15 @@
+/*										
+	Written by:	Group 2, 62410 CDIO, DTU Diplom
+							Mikkel Ambjørn Boholdt-Pedersen
+							Emily Skovgaard Rasmussen
+							Nicolai André Stæhr Kruhøffer
+							Jørn Salonin
+							Simon Lundorf
+							Robert Sand
+	This code will detect red circles and outline them in a gui.
+	The video feed is made available by ardrone_autonomy, when run while connected to the parrot ARDrone2
+
+*/
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>

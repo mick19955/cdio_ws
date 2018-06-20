@@ -1,3 +1,14 @@
+/*										
+	Written by:	Group 2, 62410 CDIO, DTU Diplom
+							Mikkel Ambjørn Boholdt-Pedersen
+							Emily Skovgaard Rasmussen
+							Nicolai André Stæhr Kruhøffer
+							Jørn Salonin
+							Simon Lundorf
+							Robert Sand
+	This code will receive flight instructions from the flight_controller and send it to the ARDrone2 through ardrone_autonomy
+*/
+
 #include <ros/ros.h>
 #include <std_msgs/Empty.h>
 #include <std_srvs/Empty.h>

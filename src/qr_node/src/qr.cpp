@@ -15,6 +15,8 @@
 	
 	All the extracted data will be published in a int array at "/qr_info_array"
 	
+	The math and calculations used to determine the distance and displacement of the drone, was taken from the
+	following github
 	https://github.com/andreaslorentzen/dronemis2.0
 */
 

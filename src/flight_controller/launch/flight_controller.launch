@@ -9,4 +9,5 @@
 	<node name="qr" pkg="qr_node" type="qr_node"/>
 	<node name="circle_detect" pkg="circle_detect_node" type="circle_detect_node" />
 	<node name="flight_controller" pkg="flight_controller" type="flight_controller" />
+	<node name="instructor" pkg="instructor_node" type="instructor_node" />
 </launch>
